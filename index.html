@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindSpace - Your Virtual Sanctuary</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Glassmorphism custom classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .glass-panel-dark {
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Ambient Wave Animations */
+        @keyframes wave {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.02); }
+        }
+        .breathing-bubble {
+            animation: wave 4s ease-in-out infinite;
+        }
+
+        /* Wallpaper Transitions */
+        .wallpaper-transition {
+            transition: background 1.5s ease-in-out, filter 1s ease-in-out;
+        }
+
+        /* Ambient backgrounds */
+        .bg-sunset { background: linear-gradient(135deg, #f5af19, #f12711); }
+        .bg-aurora { background: linear-gradient(135deg, #0575E6, #00F260); }
+        .bg-cosmic { background: linear-gradient(135deg, #8A2387, #E94057, #F27121); }
+        .bg-lavender { background: linear-gradient(135deg, #a1c4fd, #c2e9fb); }
+        .bg-forest { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .bg-cyberpunk { background: linear-gradient(135deg, #001f3f, #0074D9, #7FDBFF, #B10DC9); }
+        .bg-dream { background: linear-gradient(135deg, #ff9a9e, #fecfef, #fecfef); }
+        .bg-midnight { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); }
+    </style>
+</head>
+<body class="w-screen h-screen relative flex flex-col md:flex-row overflow-hidden wallpaper-transition text-slate-800" id="main-body">
+
+    <!-- Ambient Floating Particles Canvas background -->
+    <canvas id="particle-canvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- CUSTOM NOTIFICATION POPUP -->
+    <div id="toast-notif" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform translate-y-[-100px] transition-all duration-300 ease-out pointer-events-none">
+        <div class="glass-panel text-white px-6 py-3 rounded-full flex items-center space-x-3 shadow-lg">
+            <span id="toast-icon">✨</span>
+            <span id="toast-text" class="font-medium text-sm text-center">Hello Beautiful Soul!</span>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div class="w-full h-full flex flex-col z-10 relative">
+
+        <!-- HEADER BAR -->
+        <header class="w-full p-4 flex flex-wrap justify-between items-center glass-panel border-b border-white/20 gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-white/20 rounded-xl">
+                    <i data-lucide="sparkles" class="text-amber-300 animate-pulse w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide text-white drop-shadow-md flex items-center gap-2">
+                        MindSpace <span class="text-xs bg-white/30 px-2 py-0.5 rounded-full text-white/90">v1.2</span>
+                    </h1>
+                    <p class="text-xs text-white/80" id="live-greeting">Loading safe space...</p>
+                </div>
+            </div>
+
+            <!-- Header Quick Stats & Controls -->
+            <div class="flex items-center space-x-3">
+                <!-- Virtual Plant Progress -->
+                <div class="flex items-center space-x-2 bg-white/20 px-3 py-1.5 rounded-xl border border-white/10 text-white cursor-pointer hover:bg-white/30 transition" onclick="showPanel('garden')">
+                    <i data-lucide="flower" class="w-4 h-4 text-emerald-300"></i>
+                    <span class="text-xs font-semibold" id="header-garden-level">Plant Level: 1</span>
+                </div>
+
+                <!-- Open Desktop Setup / Wallpaper Button -->
+                <button onclick="toggleModal('wallpaper-modal')" class="p-2 bg-white/20 text-white rounded-xl hover:bg-white/30 border border-white/10 transition tooltip" title="Change wallpaper space">
+                    <i data-lucide="palette" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Help Button -->
+                <button onclick="toggleModal('help-modal')" class="p-2 bg-white/20 text-white rounded-xl hover:bg-white/30 border border-white/10 transition" title="Sanctuary Info">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTAINER GRID -->
+        <main class="flex-1 w-full p-4 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-4 relative pb-24 md:pb-6">
+            
+            <!-- LEFT PANEL: PERSONAL SANCTUARY PANEL (Mood, Affirmation, Breathing) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                <!-- Mood & Daily Sunshine Card -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-8 -top-8 w-24 h-24 bg-amber-400/20 rounded-full blur-xl group-hover:scale-125 transition duration-500"></div>
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg flex items-center gap-2">
+                                <i data-lucide="heart" class="text-rose-400 animate-pulse w-5 h-5"></i> Today's Mindset
+                            </h3>
+                            <span class="text-xs bg-white/20 px-2 py-1 rounded-lg" id="mood-date-display">May 20, 2026</span>
+                        </div>
+                        <p class="text-sm text-white/90 mb-4">How is your heart feeling in this exact moment?</p>
+                        
+                        <div class="grid grid-cols-5 gap-2 mb-4">
+                            <button onclick="logMood('Happy', '😊')" class="mood-btn flex flex-col items-center p-2 rounded-xl bg-white/10 hover:bg-amber-400/40 border border-white/10 transition group">
+                                <span class="text-2xl group-hover:scale-110 transition">😊</span>
+                                <span class="text-[10px] mt-1 font-semibold text-white/90">Peaceful</span>
+                            </button>
+                            <button onclick="logMood('Excited', '🥳')" class="mood-btn flex flex-col items-center p-2 rounded-xl bg-white/10 hover:bg-emerald-400/40 border border-white/10 transition group">
+                                <span class="text-2xl group-hover:scale-110 transition">🥳</span>
+                                <span class="text-[10px] mt-1 font-semibold text-white/90">Excited</span>
+                            </button>
+                            <button onclick="logMood('Stressed', '🤯')" class="mood-btn flex flex-col items-center p-2 rounded-xl bg-white/10 hover:bg-violet-400/40 border border-white/10 transition group">
+                                <span class="text-2xl group-hover:scale-110 transition">🤯</span>
+                                <span class="text-[10px] mt-1 font-semibold text-white/90">Anxious</span>
+                            </button>
+                            <button onclick="logMood('Tired', '🥱')" class="mood-btn flex flex-col items-center p-2 rounded-xl bg-white/10 hover:bg-blue-400/40 border border-white/10 transition group">
+                                <span class="text-2xl group-hover:scale-110 transition">🥱</span>
+                                <span class="text-[10px] mt-1 font-semibold text-white/90">Drained</span>
+                            </button>
+                            <button onclick="logMood('Sad', '🥺')" class="mood-btn flex flex-col items-center p-2 rounded-xl bg-white/10 hover:bg-rose-400/40 border border-white/10 transition group">
+                                <span class="text-2xl group-hover:scale-110 transition">🥺</span>
+                                <span class="text-[10px] mt-1 font-semibold text-white/90">Tender</span>
+                            </button>
+                        </div>
+
+                        <!-- Mini Mood History -->
+                        <div class="bg-black/10 p-3 rounded-xl border border-white/5">
+                            <span class="text-xs text-white/75 font-semibold block mb-1">Your recent reflections:</span>
+                            <div class="flex gap-1.5 flex-wrap" id="mood-history-list">
+                                <span class="text-xs text-white/50 italic">No reflections registered today yet.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breathing Coach Widget -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col justify-between relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-lg flex items-center gap-2">
+                            <i data-lucide="wind" class="text-teal-300 w-5 h-5 animate-pulse"></i> Breathe Space
+                        </h3>
+                        <span class="text-xs text-teal-200">Release Stress</span>
+                    </div>
+                    
+                    <div class="flex flex-col items-center justify-center my-4 relative">
+                        <!-- Outer breathing visualizer ring -->
+                        <div id="breath-circle" class="w-32 h-32 rounded-full border-4 border-teal-300/30 flex items-center justify-center transition-all duration-4000 ease-in-out">
+                            <!-- Inner breathing indicator -->
+                            <div id="breath-inner" class="w-24 h-24 rounded-full bg-teal-300/30 flex items-center justify-center transform scale-75 transition-all duration-4000 ease-in-out relative">
+                                <span class="font-bold text-sm tracking-widest text-white uppercase text-center drop-shadow" id="breath-text">Inhale</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-teal-100 text-center mt-4 max-w-xs">Match your inhalation and exhalation speed with the pulsating visual ring to calm your nervous system instantly.</p>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button onclick="toggleBreathingCoach()" id="breath-btn" class="px-5 py-2 rounded-full bg-teal-400/30 hover:bg-teal-400/50 border border-teal-300/50 transition font-semibold text-sm flex items-center gap-2">
+                            <i data-lucide="play" class="w-4 h-4"></i> Start Rhythm
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Daily Spark Affirmation Block -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-base flex items-center gap-2 text-yellow-200">
+                            <i data-lucide="sparkle" class="text-yellow-200 w-5 h-5 animate-spin-slow"></i> Positive Vibration
+                        </h3>
+                        <button onclick="rollNewAffirmation()" class="p-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 transition">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 text-white/90"></i>
+                        </button>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex-1 flex flex-col justify-center min-h-[90px]">
+                        <p class="text-center italic font-medium text-lg leading-relaxed text-white drop-shadow" id="affirmation-quote">
+                            "I am worthy of peaceful spaces, absolute motivation, and creating a beautiful environment for my soul to thrive."
+                        </p>
+                    </div>
+                    <p class="text-[10px] text-center text-white/60 mt-2">Gently whisper this to yourself 3 times.</p>
+                </div>
+            </div>
+
+            <!-- MIDDLE PANEL: INTERACTIVE STUDY WIDGET & VIRTUAL GARDEN -->
+            <div class="lg:col-span-5 flex flex-col gap-4">
+                
+                <!-- Study Focus Companion Widget (Pomodoro + Music) -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col justify-between relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="timer" class="text-rose-300 w-5 h-5"></i>
+                            <h3 class="font-bold text-lg">Focus Companion</h3>
+                        </div>
+                        <!-- Focus state indicator badge -->
+                        <span id="timer-status" class="text-xs bg-rose-500/30 px-2.5 py-1 rounded-full border border-rose-400/20 font-bold tracking-wide">Ready to Focus</span>
+                    </div>
+
+                    <!-- Digital Timer Display -->
+                    <div class="flex flex-col items-center justify-center py-6 bg-black/10 rounded-2xl border border-white/5 my-2">
+                        <div class="text-5xl md:text-6xl font-bold tracking-widest text-center tabular-nums" id="timer-time">25:00</div>
+                        <div class="flex mt-4 space-x-2">
+                            <button onclick="startFocusTimer()" id="timer-ctrl-btn" class="px-5 py-1.5 rounded-full bg-emerald-500/40 hover:bg-emerald-500/60 border border-emerald-400/30 font-semibold text-sm flex items-center gap-1 transition">
+                                <i data-lucide="play" class="w-4 h-4"></i> Start Focus
+                            </button>
+                            <button onclick="pauseFocusTimer()" class="px-3 py-1.5 rounded-full bg-amber-500/40 hover:bg-amber-500/60 border border-amber-400/30 font-semibold text-sm flex items-center gap-1 transition">
+                                <i data-lucide="pause" class="w-4 h-4"></i> Pause
+                            </button>
+                            <button onclick="resetFocusTimer()" class="px-3 py-1.5 rounded-full bg-rose-500/40 hover:bg-rose-500/60 border border-rose-400/30 font-semibold text-sm flex items-center gap-1 transition">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset
+                            </button>
+                        </div>
+                        
+                        <!-- Toggle Sessions -->
+                        <div class="flex gap-2 mt-4 text-xs font-semibold">
+                            <button onclick="setTimerType('pomodoro')" id="pomo-mode-btn" class="px-3 py-1 bg-white/25 rounded-lg border border-white/25">Pomodoro</button>
+                            <button onclick="setTimerType('shortBreak')" id="short-mode-btn" class="px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 border border-white/10">Short Rest</button>
+                            <button onclick="setTimerType('longBreak')" id="long-mode-btn" class="px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 border border-white/10">Deep Rest</button>
+                        </div>
+                    </div>
+
+                    <!-- Ambient Sounds Mixer (Synthesized using Web Audio API!) -->
+                    <div class="mt-4">
+                        <span class="text-xs font-bold text-rose-200 block mb-2">Ambient Atmosphere Mixer (Soundscapes)</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <!-- Rain Trigger -->
+                            <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-white/10 border border-white/10 text-center">
+                                <span class="text-lg">🌧️</span>
+                                <span class="text-[10px] mt-1 font-semibold">Soft Rain</span>
+                                <input type="range" min="0" max="100" value="0" id="rain-vol" class="w-full mt-2 cursor-pointer h-1 rounded-lg bg-white/20 accent-white" oninput="adjustAtmosphereVolume('rain', this.value)">
+                            </div>
+                            <!-- Binaural beats Focus Trigger -->
+                            <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-white/10 border border-white/10 text-center">
+                                <span class="text-lg">🧘</span>
+                                <span class="text-[10px] mt-1 font-semibold">Alpha Wave</span>
+                                <input type="range" min="0" max="100" value="0" id="binaural-vol" class="w-full mt-2 cursor-pointer h-1 rounded-lg bg-white/20 accent-white" oninput="adjustAtmosphereVolume('binaural', this.value)">
+                            </div>
+                            <!-- White Noise Trigger -->
+                            <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-white/10 border border-white/10 text-center">
+                                <span class="text-lg">🌲</span>
+                                <span class="text-[10px] mt-1 font-semibold">Forest Wind</span>
+                                <input type="range" min="0" max="100" value="0" id="forest-vol" class="w-full mt-2 cursor-pointer h-1 rounded-lg bg-white/20 accent-white" oninput="adjustAtmosphereVolume('forest', this.value)">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-white/50 text-center mt-2">Adjust sliders to blend custom relaxing audio waves.</p>
+                    </div>
+                </div>
+
+                <!-- MY VIRTUAL GARDEN -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col justify-between relative overflow-hidden" id="panel-garden">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="sprout" class="text-emerald-300 w-5 h-5 animate-pulse"></i>
+                            <h3 class="font-bold text-lg">My Virtual Zen Plant</h3>
+                        </div>
+                        <span class="text-xs bg-emerald-500/30 px-2 py-0.5 rounded-full border border-emerald-400/20" id="garden-score">Sprout Score: 0</span>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-4 py-3 bg-black/10 rounded-2xl p-4 border border-white/5">
+                        <!-- Garden Plant Render Container -->
+                        <div class="w-32 h-32 bg-white/5 border border-white/10 rounded-full flex items-center justify-center overflow-hidden relative">
+                            <!-- Visual Growth Stage via SVG drawing -->
+                            <svg id="plant-svg" viewBox="0 0 100 100" class="w-full h-full transition-all duration-1000">
+                                <!-- Base Pot -->
+                                <path d="M 35 80 L 65 80 L 60 95 L 40 95 Z" fill="#b45309" stroke="#78350f" stroke-width="2"/>
+                                <!-- Sprout line structure (dynamically modified with JS) -->
+                                <path id="plant-stem" d="M 50 80 Q 50 70 50 70" fill="none" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+                                <path id="plant-leaf-l" d="M 50 70 Q 40 65 42 55 Q 50 62 50 70" fill="#34d399" opacity="0"/>
+                                <path id="plant-leaf-r" d="M 50 70 Q 60 65 58 55 Q 50 62 50 70" fill="#34d399" opacity="0"/>
+                                <circle id="plant-flower" cx="50" cy="45" r="8" fill="#facc15" opacity="0" stroke="#f59e0b" stroke-width="1.5"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="flex-1 flex flex-col justify-center text-center md:text-left">
+                            <h4 class="font-bold text-sm text-emerald-200" id="plant-stage-name">Seedling Stage</h4>
+                            <p class="text-xs text-white/80 mt-1 leading-relaxed">
+                                Complete 25-minute Focus Sessions in the companion above to water your plant and earn Zen points. Watch it sprout, grow leaves, and finally blossom with flowers!
+                            </p>
+                            <!-- Progress Bar to next stage -->
+                            <div class="w-full bg-white/20 h-2.5 rounded-full mt-3 overflow-hidden border border-white/10">
+                                <div id="garden-progress-bar" class="bg-emerald-400 h-full w-[10%] transition-all duration-500"></div>
+                            </div>
+                            <span class="text-[10px] text-white/60 mt-1 block" id="progress-text">10% towards growth</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: INTERACTIVE WIDGET BOARD & TODO TASK TRACKER -->
+            <div class="lg:col-span-3 flex flex-col gap-4">
+                
+                <!-- Daily Mindful Goals (To-Do List) -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col justify-between relative overflow-hidden flex-1 min-h-[300px]">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg flex items-center gap-2">
+                                <i data-lucide="check-square" class="text-sky-300 w-5 h-5"></i> Mindful Goals
+                            </h3>
+                            <button onclick="clearCompletedTasks()" class="text-[10px] text-sky-200 hover:underline bg-white/10 px-2 py-1 rounded">Clear Done</button>
+                        </div>
+
+                        <!-- Task Inputs -->
+                        <form onsubmit="addTask(event)" class="flex gap-2 mb-3">
+                            <input type="text" id="task-input" placeholder="Create motivational mini-step..." class="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-sky-300">
+                            <button type="submit" class="bg-sky-400/40 hover:bg-sky-400/60 border border-sky-300/30 px-3 rounded-xl transition flex items-center justify-center">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+
+                        <!-- Tasks Scroll Container -->
+                        <div class="space-y-2 max-h-[220px] overflow-y-auto pr-1" id="task-container">
+                            <!-- Sample task -->
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" class="accent-sky-300">
+                                    <span class="text-xs">Take 3 deep, smiling breaths</span>
+                                </div>
+                                <button class="text-white/40 hover:text-rose-300"><i data-lucide="trash" class="w-3 h-3"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                        <span class="text-xs text-sky-100" id="task-stats">0 of 0 steps done</span>
+                        <span class="text-[10px] text-yellow-300 flex items-center gap-1" id="task-streak">🔥 0 Days Goal Streak</span>
+                    </div>
+                </div>
+
+                <!-- Sanctuary Desktop Manager & Sticky Note Creator -->
+                <div class="glass-panel rounded-3xl p-5 text-white flex flex-col justify-between relative overflow-hidden">
+                    <h3 class="font-bold text-base flex items-center gap-2 mb-3">
+                        <i data-lucide="sticky-note" class="text-yellow-300 w-5 h-5"></i> Sticky Note Spawner
+                    </h3>
+                    <p class="text-xs text-white/80 mb-3">Generate custom colored virtual notes to jot down high vibrations, key dates, or thoughts.</p>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <button onclick="createNewStickyNote('#ff9a9e', 'Rose')" class="py-1.5 rounded-xl bg-rose-400/30 hover:bg-rose-400/50 border border-rose-400/40 transition text-xs font-semibold flex items-center justify-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#ff9a9e]"></span> Rose Note
+                        </button>
+                        <button onclick="createNewStickyNote('#a1c4fd', 'Sky')" class="py-1.5 rounded-xl bg-blue-400/30 hover:bg-blue-400/50 border border-blue-400/40 transition text-xs font-semibold flex items-center justify-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#a1c4fd]"></span> Sky Note
+                        </button>
+                        <button onclick="createNewStickyNote('#c2fbd7', 'Mint')" class="py-1.5 rounded-xl bg-emerald-400/30 hover:bg-emerald-400/50 border border-emerald-400/40 transition text-xs font-semibold flex items-center justify-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#c2fbd7]"></span> Mint Note
+                        </button>
+                        <button onclick="createNewStickyNote('#fff5cc', 'Peach')" class="py-1.5 rounded-xl bg-yellow-400/30 hover:bg-yellow-400/50 border border-yellow-400/40 transition text-xs font-semibold flex items-center justify-center gap-1">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#fff5cc]"></span> Yellow Note
+                        </button>
+                    </div>
+
+                    <!-- Manage/Clear Notes -->
+                    <div class="flex justify-between items-center bg-black/10 p-2.5 rounded-xl border border-white/5">
+                        <span class="text-[10px] text-white/60">Manage all stickies:</span>
+                        <button onclick="clearAllStickyNotes()" class="text-xs text-rose-300 hover:underline bg-rose-500/20 px-2 py-0.5 rounded border border-rose-400/20 font-semibold">Delete All</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- STICKY NOTES INTERACTIVE SANDBOX (Overlaid on main screen) -->
+        <div id="sticky-sandbox" class="absolute inset-0 pointer-events-none z-20">
+            <!-- Sticky Notes are dynamically injected here. They will have pointer-events-auto -->
+        </div>
+
+        <!-- FOOTER BRANDING / QUICK HELP BAR -->
+        <footer class="w-full text-center py-2 text-white/50 text-xs bg-black/15 border-t border-white/5 z-30 flex justify-between px-6 items-center flex-wrap gap-2">
+            <span>Press <i class="font-bold">Palette Icon</i> up top to completely transform wallpaper and aesthetic safely inside browser.</span>
+            <div class="flex space-x-3 text-white/70">
+                <a href="#" onclick="toggleModal('wallpaper-modal')" class="hover:text-white transition">Wallpapers</a>
+                <span>•</span>
+                <a href="#" onclick="toggleModal('help-modal')" class="hover:text-white transition">Self-care Guide</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- WALLPAPER / THEME SELECTOR MODAL -->
+    <div id="wallpaper-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel text-white rounded-3xl p-6 max-w-lg w-full relative border border-white/20 shadow-2xl">
+            <button onclick="toggleModal('wallpaper-modal')" class="absolute top-4 right-4 p-2 rounded-xl bg-white/15 hover:bg-white/25 transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+                <i data-lucide="palette" class="text-amber-300"></i> Virtual Wallpapers Room
+            </h2>
+            <p class="text-xs text-white/80 mb-5">Since this space lives securely inside your browser, change this wallpaper as many times as you want! Choose an ambient style that fits your energy:</p>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <!-- Preset Option 1 -->
+                <button onclick="setThemeBackground('bg-sunset')" class="relative h-20 bg-sunset rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-white drop-shadow-md">Solar Dawn</span>
+                </button>
+                <!-- Preset Option 2 -->
+                <button onclick="setThemeBackground('bg-aurora')" class="relative h-20 bg-aurora rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-white drop-shadow-md">Aurora Dreams</span>
+                </button>
+                <!-- Preset Option 3 -->
+                <button onclick="setThemeBackground('bg-cosmic')" class="relative h-20 bg-cosmic rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-white drop-shadow-md">Cosmic Sparkle</span>
+                </button>
+                <!-- Preset Option 4 -->
+                <button onclick="setThemeBackground('bg-lavender')" class="relative h-20 bg-lavender rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-slate-800 drop-shadow-sm">Lavender Breeze</span>
+                </button>
+                <!-- Preset Option 5 -->
+                <button onclick="setThemeBackground('bg-forest')" class="relative h-20 bg-forest rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-white drop-shadow-md">Emerald Grove</span>
+                </button>
+                <!-- Preset Option 6 -->
+                <button onclick="setThemeBackground('bg-cyberpunk')" class="relative h-20 bg-cyberpunk rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-white drop-shadow-md">Neon Sanctuary</span>
+                </button>
+                <!-- Preset Option 7 -->
+                <button onclick="setThemeBackground('bg-dream')" class="relative h-20 bg-dream rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-slate-800 drop-shadow-sm">Soft Pastel Dream</span>
+                </button>
+                <!-- Preset Option 8 -->
+                <button onclick="setThemeBackground('bg-midnight')" class="relative h-20 bg-midnight rounded-2xl border-2 border-white/10 hover:border-white transition overflow-hidden text-left p-3 flex flex-col justify-end group">
+                    <span class="font-bold text-xs text-white drop-shadow-md">Midnight Calm</span>
+                </button>
+            </div>
+
+            <!-- Custom Solid Color Canvas -->
+            <div class="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center justify-between">
+                <span class="text-xs">Custom Solid Color Mood:</span>
+                <input type="color" id="custom-theme-color" oninput="setCustomThemeColor(this.value)" class="w-10 h-10 rounded-full border border-white/20 cursor-pointer overflow-hidden bg-transparent">
+            </div>
+        </div>
+    </div>
+
+    <!-- HELP / TIPS MODAL -->
+    <div id="help-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="glass-panel text-white rounded-3xl p-6 max-w-lg w-full relative border border-white/20 shadow-2xl">
+            <button onclick="toggleModal('help-modal')" class="absolute top-4 right-4 p-2 rounded-xl bg-white/15 hover:bg-white/25 transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+                <i data-lucide="sparkles" class="text-yellow-300"></i> Your Digital Sanctuary Guide
+            </h2>
+            <div class="space-y-4 text-xs text-white/90 overflow-y-auto max-h-[350px] pr-2">
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+                    <h3 class="font-bold text-yellow-200 mb-1">🔐 Privacy Secured Safe Space</h3>
+                    <p>Since your phone is shared, this environment allows you to craft notes, tasks, mood histories, and aesthetic wallpapers which won't be seen unless this specific website is open!</p>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+                    <h3 class="font-bold text-emerald-300 mb-1">🌱 Grow Your Mindset & Plant</h3>
+                    <p>Every time you set the Pomodoro Timer to focus, you gain score points. Watch your Zen plant grow from seedling to flowering plant. Growth points are stored directly in LocalStorage so you can cultivate your digital garden daily.</p>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+                    <h3 class="font-bold text-teal-300 mb-1">🌬️ Stress & Anxiety Release</h3>
+                    <p>When studying becomes heavy, use our customized breathing coach visualizer and turn on the "Atmosphere Rain" or "Alpha wave binaural beats" below the timer to stay perfectly focused and motivated.</p>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10">
+                    <h3 class="font-bold text-rose-300 mb-1">📌 Virtual Sticky Note Control</h3>
+                    <p>Create sticky notes in real time. Hover over notes to find the 'Pin' button. When **unpinned**, you can freely drag notes anywhere on your dashboard. When **pinned**, they are locked in position!</p>
+                </div>
+            </div>
+            <button onclick="toggleModal('help-modal')" class="w-full mt-5 py-2.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold rounded-xl transition text-sm">
+                Got it, peaceful studying!
+            </button>
+        </div>
+    </div>
+
+    <!-- INITIALIZATION / JAVASCRIPT LOGIC -->
+    <script>
+        // --- Web Audio API Ambient Synthesizer (Zero External File Dependencies) ---
+        let audioCtx = null;
+        let rainSource = null, rainGain = null;
+        let binauralLeft = null, binauralRight = null, binauralGain = null;
+        let forestSource = null, forestGain = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 1. Synthesize Pink Noise for Rain sound
+            const bufferSize = 2 * audioCtx.sampleRate;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                output[i] *= 0.11; // normalise
+                b6 = white * 0.115926;
+            }
+
+            // Setup Rain Node
+            rainSource = audioCtx.createBufferSource();
+            rainSource.buffer = noiseBuffer;
+            rainSource.loop = true;
+            
+            // Lowpass Filter to make the rain softer and deep
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+
+            rainGain = audioCtx.createGain();
+            rainGain.gain.value = 0;
+
+            rainSource.connect(filter);
+            filter.connect(rainGain);
+            rainGain.connect(audioCtx.destination);
+            rainSource.start(0);
+
+            // 2. Synthesize Binaural Focus Wave (100Hz and 105Hz sine waves for alpha-state waves)
+            const merger = audioCtx.createChannelMerger(2);
+            binauralLeft = audioCtx.createOscillator();
+            binauralLeft.type = 'sine';
+            binauralLeft.frequency.value = 100; // Left ear base
+
+            binauralRight = audioCtx.createOscillator();
+            binauralRight.type = 'sine';
+            binauralRight.frequency.value = 105; // Right ear alpha target
+
+            const leftGain = audioCtx.createGain();
+            const rightGain = audioCtx.createGain();
+            leftGain.gain.value = 0.5;
+            rightGain.gain.value = 0.5;
+
+            binauralGain = audioCtx.createGain();
+            binauralGain.gain.value = 0;
+
+            binauralLeft.connect(leftGain).connect(merger, 0, 0);
+            binauralRight.connect(rightGain).connect(merger, 0, 1);
+            merger.connect(binauralGain).connect(audioCtx.destination);
+
+            binauralLeft.start(0);
+            binauralRight.start(0);
+
+            // 3. Synthesize Forest Wind using Bandpass Filtered Pink Noise with low-frequency modulation
+            forestSource = audioCtx.createBufferSource();
+            forestSource.buffer = noiseBuffer;
+            forestSource.loop = true;
+
+            const windFilter = audioCtx.createBiquadFilter();
+            windFilter.type = 'bandpass';
+            windFilter.frequency.value = 400;
+            windFilter.Q.value = 2.0;
+
+            // Low frequency modulator to simulate wind gusts
+            const modulator = audioCtx.createOscillator();
+            modulator.frequency.value = 0.08; // Super slow cycle (12 seconds)
+            const modGain = audioCtx.createGain();
+            modGain.gain.value = 250; // Sweeps filter between 150Hz and 650Hz
+
+            modulator.connect(modGain).connect(windFilter.frequency);
+            modulator.start(0);
+
+            forestGain = audioCtx.createGain();
+            forestGain.gain.value = 0;
+
+            forestSource.connect(windFilter);
+            windFilter.connect(forestGain);
+            forestGain.connect(audioCtx.destination);
+            forestSource.start(0);
+        }
+
+        function adjustAtmosphereVolume(type, val) {
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const normVal = parseFloat(val) / 100;
+            if (type === 'rain' && rainGain) {
+                rainGain.gain.linearRampToValueAtTime(normVal * 0.4, audioCtx.currentTime + 0.1);
+            } else if (type === 'binaural' && binauralGain) {
+                binauralGain.gain.linearRampToValueAtTime(normVal * 0.25, audioCtx.currentTime + 0.1);
+            } else if (type === 'forest' && forestGain) {
+                forestGain.gain.linearRampToValueAtTime(normVal * 0.5, audioCtx.currentTime + 0.1);
+            }
+        }
+
+        // Play short synthetic chime for timers
+        function playChime() {
+            if (!audioCtx) initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            
+            const osc = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const chimeGain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.3); // A5
+
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(329.63, now); // E4
+            osc2.frequency.exponentialRampToValueAtTime(659.25, now + 0.4); // E5
+
+            chimeGain.gain.setValueAtTime(0.3, now);
+            chimeGain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+
+            osc.connect(chimeGain);
+            osc2.connect(chimeGain);
+            chimeGain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc2.start(now);
+            osc.stop(now + 1.2);
+            osc2.stop(now + 1.2);
+        }
+
+        // --- Persistent App State & LocalStorage Keys ---
+        const APP_STORAGE_KEY = "mindspace_sanctuary_data";
+        
+        let state = {
+            theme: "bg-sunset",
+            customColor: "",
+            plantScore: 0,
+            moodHistory: [],
+            goals: [
+                { id: 1, text: "Breathe in peace, breathe out doubts", completed: true },
+                { id: 2, text: "Set up my virtual desktop just the way I love", completed: false },
+                { id: 3, text: "Complete one 25-min quiet study space session", completed: false }
+            ],
+            stickies: [
+                { id: 1, x: 25, y: 15, color: "#ff9a9e", content: "⭐ Focus on your own growth. You are doing amazing!", pinned: false },
+                { id: 2, x: 65, y: 40, color: "#fff5cc", content: "📖 Deep study session: No phone notifications inside your personal workspace", pinned: true }
+            ],
+            dailyStreak: 0,
+            lastStreakUpdate: ""
+        };
+
+        // --- Core Helpers: Save & Load ---
+        function saveToStorage() {
+            localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem(APP_STORAGE_KEY);
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    state = { ...state, ...parsed };
+                } catch (e) {
+                    console.error("Could not parse saved storage, initializing clean data.", e);
+                }
+            }
+        }
+
+        // --- Toast Notification helper ---
+        function showToast(text, icon = "✨") {
+            const toast = document.getElementById('toast-notif');
+            document.getElementById('toast-text').innerText = text;
+            document.getElementById('toast-icon').innerText = icon;
+            
+            toast.style.transform = "translateY(0px)";
+            
+            setTimeout(() => {
+                toast.style.transform = "translateY(-100px)";
+            }, 3500);
+        }
+
+        // --- Greeting updates based on real clock ---
+        function updateGreeting() {
+            const hours = new Date().getHours();
+            let msg = "";
+            if (hours < 12) msg = "Rise and shine, sweet soul. Your space is ready.";
+            else if (hours < 18) msg = "In the middle of the day, take a beautiful deep breath.";
+            else msg = "Evening calmness is settling in. Let's finish today strong.";
+            document.getElementById('live-greeting').innerText = msg;
+        }
+
+        // --- Themes/Wallpaper Engine ---
+        function setThemeBackground(className) {
+            const body = document.getElementById('main-body');
+            // Remove previous preset gradients
+            body.className = "w-screen h-screen relative flex flex-col md:flex-row overflow-hidden wallpaper-transition text-slate-800";
+            body.classList.add(className);
+            
+            state.theme = className;
+            state.customColor = "";
+            saveToStorage();
+            showToast("Atmosphere wallpaper adjusted beautifully!", "🌌");
+        }
+
+        function setCustomThemeColor(color) {
+            const body = document.getElementById('main-body');
+            body.className = "w-screen h-screen relative flex flex-col md:flex-row overflow-hidden wallpaper-transition text-slate-800";
+            body.style.background = color;
+            
+            state.customColor = color;
+            state.theme = "";
+            saveToStorage();
+        }
+
+        function applySavedTheme() {
+            const body = document.getElementById('main-body');
+            if (state.customColor) {
+                body.className = "w-screen h-screen relative flex flex-col md:flex-row overflow-hidden wallpaper-transition text-slate-800";
+                body.style.background = state.customColor;
+                document.getElementById('custom-theme-color').value = state.customColor;
+            } else {
+                body.className = "w-screen h-screen relative flex flex-col md:flex-row overflow-hidden wallpaper-transition text-slate-800";
+                body.classList.add(state.theme || "bg-sunset");
+            }
+        }
+
+        // --- Simple Modal Manager ---
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+        }
+
+        // --- Mood Tracker Tracker ---
+        const inspirationalTips = {
+            'Happy': 'Wonderful! Let this sunshine energy fuel your studies today.',
+            'Excited': 'Let\'s channel that amazing peak energy into tackling hard tasks.',
+            'Stressed': 'Take a deep 4-sec inhale. You don\'t have to complete everything today.',
+            'Tired': 'Give your eyes a rest. Sip warm water. Go easy on yourself.',
+            'Sad': 'Your feelings are valid. You are in a safe, soft space. Take tiny steps.'
+        };
+
+        function logMood(mood, emoji) {
+            const today = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            
+            // Check if mood entry already exists today and update or push
+            const existingIdx = state.moodHistory.findIndex(m => m.date === today);
+            if (existingIdx !== -1) {
+                state.moodHistory[existingIdx] = { mood, emoji, date: today };
+            } else {
+                state.moodHistory.push({ mood, emoji, date: today });
+                if (state.moodHistory.length > 8) state.moodHistory.shift(); // Keep limit
+            }
+
+            saveToStorage();
+            renderMoodHistory();
+            
+            // Prompt response based on mood
+            const msg = inspirationalTips[mood] || "Gently keeping you in space.";
+            showToast(`${emoji} Mindset Saved! ${msg}`, "❤️");
+        }
+
+        function renderMoodHistory() {
+            const container = document.getElementById('mood-history-list');
+            if (state.moodHistory.length === 0) {
+                container.innerHTML = `<span class="text-xs text-white/50 italic">Log your state of mind to track progress.</span>`;
+                return;
+            }
+            container.innerHTML = state.moodHistory.map(item => `
+                <div class="flex items-center space-x-1 bg-white/10 px-2 py-1 rounded-lg border border-white/5">
+                    <span class="text-sm">${item.emoji}</span>
+                    <span class="text-[10px] font-semibold text-white/80">${item.date}</span>
+                </div>
+            `).join('');
+        }
+
+        // --- Mindful Goals Tasks Manager ---
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const newTask = {
+                id: Date.now(),
+                text: text,
+                completed: false
+            };
+
+            state.goals.push(newTask);
+            saveToStorage();
+            renderTasks();
+            input.value = "";
+            showToast("New mindful step spawned!", "🌱");
+        }
+
+        function toggleTask(id) {
+            const task = state.goals.find(g => g.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                if (task.completed) {
+                    addGrowthPoints(2); // Complete tasks builds garden
+                    showToast("Task blossomed! +2 Sprout Score", "🌸");
+                }
+                saveToStorage();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            state.goals = state.goals.filter(g => g.id !== id);
+            saveToStorage();
+            renderTasks();
+            showToast("Step carefully cleaned away", "🧹");
+        }
+
+        function clearCompletedTasks() {
+            state.goals = state.goals.filter(g => !g.completed);
+            saveToStorage();
+            renderTasks();
+            showToast("Cleared old thoughts out", "✨");
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('task-container');
+            if (state.goals.length === 0) {
+                container.innerHTML = `<div class="text-xs text-white/40 italic text-center py-4">No remaining steps today. Relax!</div>`;
+                document.getElementById('task-stats').innerText = "0 steps remaining";
+                return;
+            }
+
+            container.innerHTML = state.goals.map(t => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <input type="checkbox" onchange="toggleTask(${t.id})" ${t.completed ? 'checked' : ''} class="w-4 h-4 accent-sky-300 rounded cursor-pointer">
+                        <span class="text-xs text-left ${t.completed ? 'line-through text-white/40' : 'text-white'} leading-tight truncate">${t.text}</span>
+                    </div>
+                    <button onclick="deleteTask(${t.id})" class="text-white/40 hover:text-rose-300 transition shrink-0 pl-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const done = state.goals.filter(g => g.completed).length;
+            const total = state.goals.length;
+            document.getElementById('task-stats').innerText = `${done} of ${total} steps completed`;
+            lucide.createIcons();
+        }
+
+        // --- Motivational Quotes Deck ---
+        const quotes = [
+            "I am worthy of taking small peaceful breaks.",
+            "My potential is not defined by one moment of struggle.",
+            "With each breath, I step cleanly into clarity.",
+            "I deserve to create a space that brings me quiet happiness.",
+            "This study time is a loving gift to my bright future self.",
+            "I do not need to prove anything to anyone. I am growing in quiet.",
+            "Storms pass. Seeds wait patiently. Flowers open. I will too.",
+            "I can adjust this virtual safe space exactly the way I feel happy."
+        ];
+
+        function rollNewAffirmation() {
+            const r = Math.floor(Math.random() * quotes.length);
+            const textNode = document.getElementById('affirmation-quote');
+            textNode.classList.add('opacity-0');
+            setTimeout(() => {
+                textNode.innerText = `"${quotes[r]}"`;
+                textNode.classList.remove('opacity-0');
+            }, 300);
+            showToast("Vibrations aligned", "🔮");
+        }
+
+        // --- Interactive Breath Coach Engine ---
+        let breathingInterval = null;
+        let breathState = 0; // 0: inhale, 1: hold, 2: exhale
+        const breathTexts = ["Inhale Light", "Hold Peace", "Exhale Doubt"];
+        
+        function toggleBreathingCoach() {
+            const btn = document.getElementById('breath-btn');
+            const inner = document.getElementById('breath-inner');
+            const circle = document.getElementById('breath-circle');
+            const text = document.getElementById('breath-text');
+
+            if (breathingInterval) {
+                // Stop Coach
+                clearInterval(breathingInterval);
+                breathingInterval = null;
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> Start Rhythm`;
+                text.innerText = "Breath Coach";
+                inner.className = "w-24 h-24 rounded-full bg-teal-300/30 flex items-center justify-center transform scale-75 transition-all duration-4000 ease-in-out";
+                circle.className = "w-32 h-32 rounded-full border-4 border-teal-300/30 flex items-center justify-center transition-all duration-4000 ease-in-out";
+                lucide.createIcons();
+                showToast("Breathing sequence rested.", "🌬️");
+                return;
+            }
+
+            // Start coach loop
+            btn.innerHTML = `<i data-lucide="square" class="w-4 h-4"></i> Rest`;
+            lucide.createIcons();
+            showToast("Breathe along with the slow moving energy circles.", "🌬️");
+            
+            let count = 0;
+            const cycleBreath = () => {
+                const phase = count % 3;
+                text.innerText = breathTexts[phase];
+                
+                if (phase === 0) { // Inhale
+                    inner.className = "w-24 h-24 rounded-full bg-teal-300/50 flex items-center justify-center transform scale-110 transition-all duration-4000 ease-in-out";
+                    circle.className = "w-32 h-32 rounded-full border-4 border-teal-300/50 flex items-center justify-center transform scale-125 transition-all duration-4000 ease-in-out";
+                } else if (phase === 1) { // Hold
+                    inner.className = "w-24 h-24 rounded-full bg-amber-300/50 flex items-center justify-center transform scale-110 transition-all duration-4000 ease-in-out";
+                    circle.className = "w-32 h-32 rounded-full border-4 border-amber-300/50 flex items-center justify-center transform scale-125 transition-all duration-4000 ease-in-out";
+                } else { // Exhale
+                    inner.className = "w-24 h-24 rounded-full bg-teal-300/20 flex items-center justify-center transform scale-75 transition-all duration-4000 ease-in-out";
+                    circle.className = "w-32 h-32 rounded-full border-4 border-teal-300/20 flex items-center justify-center transform scale-90 transition-all duration-4000 ease-in-out";
+                }
+                count++;
+            };
+
+            cycleBreath();
+            breathingInterval = setInterval(cycleBreath, 4000);
+        }
+
+        // --- Pomodoro Study Focus Timer Logic ---
+        let timerInterval = null;
+        let timerTimeLeft = 25 * 60; // 25 mins base
+        let timerType = 'pomodoro'; // 'pomodoro', 'shortBreak', 'longBreak'
+
+        const timerPresets = {
+            pomodoro: 25 * 60,
+            shortBreak: 5 * 60,
+            longBreak: 15 * 60
+        };
+
+        function setTimerType(type) {
+            timerType = type;
+            timerTimeLeft = timerPresets[type];
+            updateTimerDisplay();
+
+            // Toggle UI buttons state
+            document.getElementById('pomo-mode-btn').className = type === 'pomodoro' ? "px-3 py-1 bg-white/25 rounded-lg border border-white/25" : "px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 border border-white/10";
+            document.getElementById('short-mode-btn').className = type === 'shortBreak' ? "px-3 py-1 bg-white/25 rounded-lg border border-white/25" : "px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 border border-white/10";
+            document.getElementById('long-mode-btn').className = type === 'longBreak' ? "px-3 py-1 bg-white/25 rounded-lg border border-white/25" : "px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 border border-white/10";
+
+            const badge = document.getElementById('timer-status');
+            if (type === 'pomodoro') badge.innerText = "Ready to Focus";
+            else if (type === 'shortBreak') badge.innerText = "Quiet Soft Rest";
+            else badge.innerText = "Deep Restoration";
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerTimeLeft / 60);
+            const secs = timerTimeLeft % 60;
+            document.getElementById('timer-time').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function startFocusTimer() {
+            if (timerInterval) return; // already running
+            showToast("Timer flowing nicely. Breathe into your studies.", "⏳");
+            document.getElementById('timer-status').innerText = "Focus actively flowing...";
+            
+            timerInterval = setInterval(() => {
+                if (timerTimeLeft > 0) {
+                    timerTimeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    // Timer completes!
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    playChime();
+                    handleTimerCompletion();
+                }
+            }, 1000);
+        }
+
+        function pauseFocusTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                document.getElementById('timer-status').innerText = "Focus paused softly";
+                showToast("Timer paused.", "⏸️");
+            }
+        }
+
+        function resetFocusTimer() {
+            pauseFocusTimer();
+            setTimerType(timerType);
+        }
+
+        function handleTimerCompletion() {
+            if (timerType === 'pomodoro') {
+                addGrowthPoints(20); // Big reward!
+                showToast("Spectacular work! Your Zen plant received watering +20 Points", "🏆");
+                setTimerType('shortBreak');
+            } else {
+                showToast("Rest completed. Ready to step back in?", "✨");
+                setTimerType('pomodoro');
+            }
+        }
+
+        // --- Zen Plant Gardening Engine ---
+        function addGrowthPoints(points) {
+            state.plantScore += points;
+            saveToStorage();
+            updatePlantVisuals();
+        }
+
+        function updatePlantVisuals() {
+            const score = state.plantScore;
+            document.getElementById('garden-score').innerText = `Sprout Score: ${score}`;
+
+            const stem = document.getElementById('plant-stem');
+            const leafL = document.getElementById('plant-leaf-l');
+            const leafR = document.getElementById('plant-leaf-r');
+            const flower = document.getElementById('plant-flower');
+            const progressBar = document.getElementById('garden-progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const stageName = document.getElementById('plant-stage-name');
+            const headerLevelBadge = document.getElementById('header-garden-level');
+
+            let progressPct = 0;
+            let currentStage = "";
+            let plantLvl = 1;
+
+            if (score < 30) {
+                // Stage 1: Seedling Sprout
+                plantLvl = 1;
+                currentStage = "Seedling Stage";
+                progressPct = Math.floor((score / 30) * 100);
+                progressText.innerText = `${score}/30 Zen points to emerge leaves`;
+                
+                // SVG updates
+                stem.setAttribute('d', `M 50 80 Q 50 ${80 - (score * 0.4)} 50 ${80 - (score * 0.4)}`);
+                leafL.setAttribute('opacity', '0');
+                leafR.setAttribute('opacity', '0');
+                flower.setAttribute('opacity', '0');
+            } else if (score < 100) {
+                // Stage 2: Strong Plant Stem & Leaves
+                plantLvl = 2;
+                currentStage = "Leafy Sprout Stage";
+                progressPct = Math.floor(((score - 30) / 70) * 100);
+                progressText.innerText = `${score}/100 Zen points to produce bud`;
+                
+                // SVG updates
+                stem.setAttribute('d', "M 50 80 Q 50 60 50 55");
+                leafL.setAttribute('opacity', '1');
+                leafR.setAttribute('opacity', '1');
+                leafL.setAttribute('d', "M 50 65 Q 40 55 35 60 Q 42 68 50 65");
+                leafR.setAttribute('d', "M 50 60 Q 60 50 65 55 Q 58 63 50 60");
+                flower.setAttribute('opacity', '0');
+            } else {
+                // Stage 3: Fully Blossomed Golden Flower
+                plantLvl = 3;
+                currentStage = "Beautiful Blooming Flower Stage! ✨";
+                progressPct = 100;
+                progressText.innerText = `Maximum Growth reached! You are doing incredibly!`;
+                
+                // SVG updates
+                stem.setAttribute('d', "M 50 80 Q 50 55 50 50");
+                leafL.setAttribute('opacity', '1');
+                leafR.setAttribute('opacity', '1');
+                leafL.setAttribute('d', "M 50 65 Q 38 55 32 60 Q 42 68 50 65");
+                leafR.setAttribute('d', "M 50 60 Q 62 50 68 55 Q 58 63 50 60");
+                
+                flower.setAttribute('opacity', '1');
+                flower.setAttribute('cy', '45');
+            }
+
+            stageName.innerText = currentStage;
+            progressBar.style.width = `${progressPct}%`;
+            headerLevelBadge.innerText = `Plant Level: ${plantLvl}`;
+        }
+
+        // --- CUSTOM VIRTUAL STICKY NOTES ENGINE ---
+        // Allows creation, deletion, dragging, editing, recolor and pinning of notes.
+
+        function createNewStickyNote(colorHex, name) {
+            const randomX = Math.floor(Math.random() * 40) + 15; // standard bounds
+            const randomY = Math.floor(Math.random() * 45) + 15;
+
+            const newSticky = {
+                id: Date.now(),
+                x: randomX,
+                y: randomY,
+                color: colorHex,
+                content: "✏️ Double tap/click to edit your peaceful message here...",
+                pinned: false
+            };
+
+            state.stickies.push(newSticky);
+            saveToStorage();
+            renderStickyNoteHTML(newSticky);
+            showToast(`Spawned a beautiful ${name} Note!`, "📌");
+        }
+
+        function renderAllStickyNotes() {
+            document.getElementById('sticky-sandbox').innerHTML = ""; // Clear
+            state.stickies.forEach(renderStickyNoteHTML);
+        }
+
+        function renderStickyNoteHTML(note) {
+            const container = document.getElementById('sticky-sandbox');
+            const noteEl = document.createElement('div');
+            noteEl.id = `sticky-note-${note.id}`;
+            noteEl.style.left = `${note.x}%`;
+            noteEl.style.top = `${note.y}%`;
+            noteEl.style.backgroundColor = note.color;
+            noteEl.className = `absolute w-52 p-3 rounded-2xl shadow-xl pointer-events-auto transition-shadow border border-white/20 select-none flex flex-col text-slate-800 focus-within:ring-2 focus-within:ring-white ${note.pinned ? 'ring-2 ring-yellow-400 border-yellow-400' : ''}`;
+            
+            noteEl.innerHTML = `
+                <!-- Grab Handle -->
+                <div class="flex justify-between items-center pb-1 border-b border-black/10 cursor-move" onmousedown="dragStart(event, ${note.id})" ontouchstart="dragStart(event, ${note.id})">
+                    <span class="text-[9px] uppercase font-bold tracking-widest text-slate-600 flex items-center gap-1">
+                        <i data-lucide="${note.pinned ? 'lock' : 'grip-horizontal'}" class="w-2.5 h-2.5"></i> ${note.pinned ? 'Pinned' : 'Movable'}
+                    </span>
+                    <div class="flex items-center space-x-1.5">
+                        <!-- Pin Trigger -->
+                        <button onclick="togglePinSticky(${note.id})" class="p-0.5 rounded hover:bg-black/10 transition" title="Toggle Pin">
+                            <i data-lucide="pin" class="w-3 h-3 ${note.pinned ? 'text-yellow-600 fill-yellow-600' : 'text-slate-600'}"></i>
+                        </button>
+                        <!-- Delete Trigger -->
+                        <button onclick="deleteStickyNote(${note.id})" class="p-0.5 rounded hover:bg-black/10 transition" title="Delete note">
+                            <i data-lucide="trash" class="w-3 h-3 text-slate-600"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Editable Area -->
+                <div contenteditable="true" onblur="updateStickyContent(${note.id}, this)" class="mt-2 text-xs font-semibold focus:outline-none min-h-[60px] max-h-[140px] overflow-y-auto cursor-text text-slate-800 leading-relaxed leading-snug">
+                    ${note.content}
+                </div>
+            `;
+
+            container.appendChild(noteEl);
+            lucide.createIcons();
+        }
+
+        // Draggable System (Supports Mouse & Multi-touch for Mobile)
+        let activeDragNoteId = null;
+        let startX, startY, origX, origY;
+
+        function dragStart(e, id) {
+            const note = state.stickies.find(n => n.id === id);
+            if (!note || note.pinned) return; // Locked/Pinned notes do not drag
+
+            activeDragNoteId = id;
+            const noteEl = document.getElementById(`sticky-note-${id}`);
+            
+            // Client X/Y support for mobile touch and desktop click
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            startX = clientX;
+            startY = clientY;
+            origX = noteEl.offsetLeft;
+            origY = noteEl.offsetTop;
+
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+        }
+
+        function dragMove(e) {
+            if (activeDragNoteId === null) return;
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+
+            const sandbox = document.getElementById('sticky-sandbox');
+            const sandboxWidth = sandbox.clientWidth;
+            const sandboxHeight = sandbox.clientHeight;
+
+            // Calculate percentage coordinates to ensure responsiveness
+            let targetX_px = origX + deltaX;
+            let targetY_px = origY + deltaY;
+
+            let pctX = (targetX_px / sandboxWidth) * 100;
+            let pctY = (targetY_px / sandboxHeight) * 100;
+
+            // Constrain within screen borders safely
+            if (pctX < 1) pctX = 1;
+            if (pctX > 85) pctX = 85;
+            if (pctY < 10) pctY = 10;
+            if (pctY > 80) pctY = 80;
+
+            const note = state.stickies.find(n => n.id === activeDragNoteId);
+            if (note) {
+                note.x = pctX;
+                note.y = pctY;
+            }
+
+            const noteEl = document.getElementById(`sticky-note-${activeDragNoteId}`);
+            if (noteEl) {
+                noteEl.style.left = `${pctX}%`;
+                noteEl.style.top = `${pctY}%`;
+            }
+        }
+
+        function dragEnd() {
+            if (activeDragNoteId !== null) {
+                saveToStorage();
+                activeDragNoteId = null;
+            }
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('mouseup', dragEnd);
+            document.removeEventListener('touchmove', dragMove);
+            document.removeEventListener('touchend', dragEnd);
+        }
+
+        function togglePinSticky(id) {
+            const note = state.stickies.find(n => n.id === id);
+            if (note) {
+                note.pinned = !note.pinned;
+                saveToStorage();
+                renderAllStickyNotes();
+                showToast(note.pinned ? "Sticky Note Pinned / Locked in place!" : "Sticky Note Unpinned / Movable", "📌");
+            }
+        }
+
+        function updateStickyContent(id, element) {
+            const note = state.stickies.find(n => n.id === id);
+            if (note) {
+                note.content = element.innerHTML.trim();
+                saveToStorage();
+            }
+        }
+
+        function deleteStickyNote(id) {
+            state.stickies = state.stickies.filter(n => n.id !== id);
+            saveToStorage();
+            renderAllStickyNotes();
+            showToast("Note deleted cleanly.", "🗑️");
+        }
+
+        function clearAllStickyNotes() {
+            state.stickies = [];
+            saveToStorage();
+            renderAllStickyNotes();
+            showToast("All sticky notes swept out!", "🧹");
+        }
+
+        // --- Ambient Background Floating Particles Engine ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.8;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = Math.random() * -0.4 - 0.1; // Float slowly upwards
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.y < 0) {
+                    this.y = canvas.height;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(Math.floor(window.innerWidth / 15), 50); // limit counts based on mobile width
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initParticles();
+        });
+
+        // --- On Application Load ---
+        window.onload = function() {
+            loadFromStorage();
+            
+            // Check daily streaks
+            const todayStr = new Date().toLocaleDateString();
+            if (state.lastStreakUpdate !== todayStr) {
+                // Earn streak point
+                state.dailyStreak += 1;
+                state.lastStreakUpdate = todayStr;
+                saveToStorage();
+            }
+            document.getElementById('task-streak').innerText = `🔥 ${state.dailyStreak} Days Study Streak`;
+
+            applySavedTheme();
+            updateGreeting();
+            setInterval(updateGreeting, 60000); // refresh greeting text
+
+            renderTasks();
+            renderMoodHistory();
+            updatePlantVisuals();
+            renderAllStickyNotes();
+
+            // Setup particle canvas
+            resizeCanvas();
+            initParticles();
+            animateParticles();
+
+            // Initial welcome toast
+            showToast("Welcome home. Everything is saved to your LocalStorage securely.", "✨");
+        };
+    </script>
+</body>
+</html>
+
